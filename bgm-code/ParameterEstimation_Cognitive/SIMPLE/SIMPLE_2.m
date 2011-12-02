@@ -1,0 +1,136 @@
+% Hierarchical SIMPLE Model
+
+clear;
+
+% Data
+load Murdock1962 k tr nsets ll pc labs
+dsets=6;
+
+% Set Dataset to Use
+T=zeros(size(k));
+dsets=6;
+gsets=9;
+
+for dset=1:gsets
+	switch dset,
+		case 1, nwords=10;lag=2;offset=15;
+		case 2, nwords=15;lag=2;offset=20;
+		case 3, nwords=20;lag=2;offset=25;
+		case 4, nwords=20;lag=1;offset=10;
+		case 5, nwords=30;lag=1;offset=15;
+		case 6, nwords=40;lag=1;offset=20;
+		case 7, nwords=10;lag=1;offset=5; %(Generalization)
+		case 8, nwords=25;lag=1;offset=12.5; %(Generalization)
+		case 9, nwords=50;lag=1;offset=25; %(Generalization)
+	end; % switch
+	% Temporal Offset For Free Recall
+	T(dset,1:nwords)=offset+[(nwords-1)*lag:-lag:0];
+W(dset)=nwords; L(dset)=lag;
+ll(dset)=nwords;
+end;
+tr(dsets+1:gsets)=1200;
+labs=char(labs,'10-2','25-2','50-2');
+k=k';T=T';
+
+% WinBUGS Parameters
+nchains=1; % How Many Chains?
+nburnin=1e3; % How Many Burn-in Samples?
+nsamples=2e3; % How Many Recorded Samples?
+
+% Assign Matlab Variables to the Observed WinBUGS Nodes
+datastruct = struct('gsets',gsets,'k',k,'tr',tr,'listlength',ll,'T',T,'dsets',dsets,'W',W);
+
+% Initialize Unobserved Variables
+for i=1:nchains
+    S.c = 20.5;
+    S.s = 9.5;
+    S.alpha = [-.003 .63];
+    init0(i) = S;
+end
+
+% Use WinBUGS to Sample
+[samples, stats] = matbugs(datastruct, ...
+    fullfile(pwd, 'SIMPLE_2.txt'), ...
+    'init', init0, ...
+    'nChains', nchains, ...
+    'view', 0, 'nburnin', nburnin, 'nsamples', nsamples, ...
+    'thin', 1, 'DICstatus', 0, 'refreshrate',nsamples, ...
+    'monitorParams', {'c','s','t','pcpred','alpha'}, ...
+    'Bugdir', 'C:/Program Files/WinBUGS14');
+
+% Some Analysis
+
+% Posterior Predictive
+figure(1);clf;	hold on;
+% Drawing Constants
+mark=char('o','o','o','o','o','o');
+ccc=char('k','k','k','k','k','k');
+hm=20;
+for dset=1:gsets
+    subplot(3,3,dset);hold on;
+    for i=1:ll(dset)
+        data=squeeze(samples.pcpred(1,:,i,dset));
+        ph=plot(i+randn(hm,1)*.1,data(ceil(rand(hm,1)*nsamples)),'ko');
+        set(ph,'markersize',2,'markerfacecolor',[.5 .5 .5],'markeredgecolor',[.5 .5 .5]);
+    end;
+    % Draw the Probability Correct Data
+    if dset<=6
+        ph=plot([1:ll(dset)],pc(dset,1:ll(dset)),'ks-');
+        set(ph,'color',ccc(dset));
+        set(ph,'markersize',2,'marker',mark(dset),'markerfacecolor','k','markeredgecolor',ccc(dset));
+    end;
+    axis([0 51 0 1]);
+    set(gca,'xtick',[0:10:50],'ytick',[0:.2:1],'box','on','fontsize',14);
+    %[lh oh]=legend(labs,'location','eastoutside');
+    th=text(51,1,deblank(labs(dset,:)));
+    set(th,'fontsize',14,'hor','right','vert','top');
+end;
+[ax,th]=suplabel('Serial Position','x');set(th,'fontsize',16);
+[ax,th]=suplabel('Probability Correct','y');set(th,'fontsize',16);
+
+% Posteriors
+figure(2);clf;hold on;
+% Drawing Constants
+epsc=.17;
+cx=[18:epsc:24];
+cxe=[18+epsc/2:epsc:24-epsc/2];
+epss=.05;
+sx=[9:epss:11];
+sxe=[9+epss/2:epss:11-epss/2];
+set(gcf,'paperpositionmode','auto','units','norm','pos',[.1 .1 .5 .3]);
+% Threshold Noise Parameter
+subplot(131);hold on;
+count=hist(samples.s,sx);
+count=count(1:end-1);count=count/sum(count)*epss;
+keep=find(count>1e-12);
+ph=plot(sxe(keep),count(keep),'k-');set(ph,'linewidth',2);
+set(gca,'ytick',[],'box','on','ticklength',[0 0],'fontsize',14);
+set(gca,'xlim',sx([1 end]));
+xlabel('Threshold Noise (s)','fontsize',14);
+ylabel('Posterior Density','fontsize',14);
+% Distinctiveness Parameter			
+subplot(132);hold on;
+count=hist(samples.c,cx);
+count=count(1:end-1);count=count/sum(count)*epsc;
+keep=find(count>1e-12);
+ph=plot(cxe(keep),count(keep),'k-');set(ph,'linewidth',2);
+set(gca,'ytick',[],'box','on','ticklength',[0 0],'fontsize',14);
+set(gca,'xlim',cx([1 end]));
+xlabel('Distinctiveness (c)','fontsize',14);
+ylabel('Posterior Density','fontsize',14);
+% Threshold Parameter as a Function Of List Length
+subplot(133);hold on;
+howmany=50;
+keep=ceil(rand(howmany,1)*nsamples);
+wdom=[1:50];
+for i=1:howmany
+    predt=samples.alpha(1,keep(i),1)*wdom+samples.alpha(1,keep(i),2);
+    ph=plot(wdom,predt,'ko');
+    set(ph,'markersize',2,'markerfacecolor',[.5 .5 .5],...
+		'markeredgecolor',[.5 .5 .5]);
+end;
+set(gca,'box','on','ytick',[0:.2:1],'ylim',[0 1],...
+	'xtick',[1 10:10:50],'xlim',[0 51],'fontsize',14);
+xlabel('Item List Length (W)','fontsize',14);
+ylabel('Threshold (t)','fontsize',14);
+

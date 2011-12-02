@@ -1,0 +1,49 @@
+# Multidimensional Scaling With Two Groups
+model {
+    # Similarity data
+    for (i in 1:NSTIM) {
+       for (j in 1:NSTIM) {
+          for (k in 1:NSUBJ) {
+              s[i,j,k] ~ dnorm(mu[i,j,z[k]],lambda)I(0,1)
+          }
+          for (g in 1:2) { 
+              mu[i,j,g] <- exp(-d[i,j,g])
+              d[i,j,g] <- pow(pow(abs(pt[i,1,g]-pt[j,1,g]),r)
+              +pow(abs(pt[i,2,g]-pt[j,2,g]),r),1/r)
+          }
+       }
+    }
+    # Two Groups
+    for (i in 1:6) {
+       z01[i] ~ dbern(0.5)
+       z[i] <- z01[i]+1
+    }
+    z[7]  <- 1
+    z[8]  <- 1
+    z[9]  <- 1
+    z[10] <- 1
+    z[11] <- 1
+    z[12] <- 1
+    z[13] <- 2
+    z[14] <- 2
+    z[15] <- 2
+    z[16] <- 2
+    # Translation Invariant Points
+    for (i in 1:NSTIM) {
+       for (x in 1:2) { 
+          for (g in 1:2) {
+             p[i,x,g] <- pt[i,x,g]-mean(pt[1:NSTIM,x,g])
+          }
+       }
+    }
+    # Priors
+    for (i in 1:NSTIM) {
+       for (x in 1:2) {
+          for (g in 1:2) {
+             pt[i,x,g] ~ dunif(-5,5)
+          }
+       }
+    }
+    sigma ~ dunif(0,0.5)
+    lambda <- 1/pow(sigma,2)
+}

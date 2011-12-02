@@ -1,0 +1,27 @@
+# Multidimensional Scaling
+model {
+    # Similarity data
+    for (i in 1:NSTIM) {
+       for (j in 1:NSTIM) {
+          for (k in 1:NSUBJ) {
+              s[i,j,k] ~ dnorm(mu[i,j],lambda)I(0,1)
+          }
+          mu[i,j] <- exp(-d[i,j])
+          d[i,j] <- pow(pow(abs(pt[i,1]-pt[j,1]),r)+pow(abs(pt[i,2]-pt[j,2]),r),1/r)
+       }
+    }
+    # Translation Invariant Points
+    for (i in 1:NSTIM) {
+       for (x in 1:2) {
+          p[i,x] <- pt[i,x]-mean(pt[1:NSTIM,x])
+       }
+    }
+    # Priors
+    for (i in 1:NSTIM) {
+       for (x in 1:2) {
+          pt[i,x] ~ dunif(-5,5)
+       }
+    }
+    sigma ~ dunif(0,0.5)
+    lambda <- 1/pow(sigma,2)
+}

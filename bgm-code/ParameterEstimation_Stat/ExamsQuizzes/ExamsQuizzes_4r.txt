@@ -1,0 +1,46 @@
+# The Two Country Quiz
+model {
+   # Probability Of Not Forgetting And Guessing
+   alpha ~ dbeta(1,1) # Not Forgetting
+   beta ~ dbeta(1,1)  # Guessing   
+   # Group Membership For People and Questions
+   for (i in 1:np){
+      pz[i] ~ dbern(0.5)
+      pz1[i] <- pz[i]+1
+   }
+   for (j in 1:nq){
+      qz[j] ~ dbern(0.5)
+      qz1[j] <- qz[j]+1
+   }   
+   # Probability Correct For Each Person-Question Comination By Groups
+   # High If Person Group Matches Question Group
+   # Low If No Match
+   for (i in 1:np){
+      for (j in 1:nq){
+         theta[i,j,1,1] <- alpha
+         theta[i,j,1,2] <- beta
+         theta[i,j,2,1] <- beta
+         theta[i,j,2,2] <- alpha
+      }
+   }   
+   # Data Are Bernoulli By Rate
+   for (i in 1:np){
+      for (j in 1:nq){
+         k[i,j] ~ dbern(theta[i,j,pz1[i],qz1[j]])
+      }
+   } 
+# Take care of NA's:
+   for (j in 5:8)
+   { 
+      NA.LP1[j-4] <- k[9,j]
+   }
+   for (j in 2:8)
+   { 
+      NA.LP2[j-1] <- k[10,j]
+   }
+   for (j in 1:8)
+   { 
+      NA.LP3[j]   <- k[11,j]
+   } 
+  
+}

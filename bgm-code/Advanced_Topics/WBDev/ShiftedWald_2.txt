@@ -1,0 +1,36 @@
+model {
+   # prior distributions for group means:
+
+   vg ~ dunif(0, 10)
+   ag ~ dunif(0, 10)
+   Terg ~ dunif(0, 1)
+
+   # prior distributions for group standard deviations:
+   sdvg ~ dunif(0,5)
+   sdag ~ dunif(0,5)
+   sdTerg ~ dbeta(1,1)            
+
+   #transformation from group standard deviations to group precisions 
+   #(i.e., 1/var, which is what WinBUGS expects
+   #as input to the dnorm distribution): 
+
+   lambdavg <- pow(sdvg,-2)    
+   lambdaag <- pow(sdag,-2)  
+   lambdaTerg <- pow(sdTerg,-2)
+
+   # Data Come From a Shifted Wald
+   for (i in 1:ns) {    #subject loop
+      #individual parameters drawn from group level 
+      #normals censored to be positive using the
+      #I(0,) command:      
+      
+      vi[i] ~ dnorm(vg, lambdavg)I(0,)      
+      ai[i] ~ dnorm(ag, lambdaag)I(0,)
+      Teri[i] ~ dnorm(Terg,lambdaTerg)I(0,)
+
+      #The data are shifted Wald distributed
+      for (j in 1:nrt[i]) {
+         rt[i,j] ~ ShiftedWald(vi[i],ai[i],Teri[i])   
+      }
+   }
+}

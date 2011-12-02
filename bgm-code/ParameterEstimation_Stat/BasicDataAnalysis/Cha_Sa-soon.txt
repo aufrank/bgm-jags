@@ -1,0 +1,14 @@
+model
+{
+  for (i in 1:nattempts)
+  {
+    # If the data were unobserved (y[i] equals "cens"), then they must
+    # range from 15 to 25:    
+    z.low[i]  <- 15*equals(y[i],cens)
+    z.high[i] <- nquestions - ((nquestions-25)*equals(y[i],cens))
+
+    z[i]       ~ dbin(theta,nquestions)I(z.low[i],z.high[i])
+  }
+  # Uniform prior on theta:
+  theta ~ dbeta(1,1) 
+}

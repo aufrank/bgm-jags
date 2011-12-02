@@ -1,0 +1,46 @@
+% Number Concept Using Analog Representation
+model {
+   # Data
+   for (i in 1:S){
+      for (j in 1:Q[i]){                  
+         # Probability g[i,j] when asked for q[i,j]
+         # is a categorical draw from their distribution over the 1:N toys
+         # which is proportional to Gaussian centered on q[i] with standard deviation
+         # given by coefficient of variation times the center
+         g[i,j] ~ dcat(npiprime[i,q[i,j],1:N])
+      }
+   }
+   # Likelihood
+   for (i in 1:S){
+      for (j in 1:N){
+         for (k in 1:N){
+            lik[i,j,k] <- 1/(sqrt(2*pic)*sigma[i]*j)*exp(-pow(k-j,2)/(2*pow(sigma[i]*j,2)))
+            piprime[i,j,k] <- lik[i,j,k]*pi[j]
+            npiprime[i,j,k] <- piprime[i,j,k]/sum(piprime[i,j,1:N])
+         }
+      }
+   }
+   # Posterior Prediction
+   for (i in 1:S){
+      for (j in 1:N){
+         for (k in 1:N){
+            npiprime.cut[i,j,k] <- cut(npiprime[i,j,k])
+         }
+         pp[i,j] ~ dcat(npiprime.cut[i,j,1:N])
+      }
+   }   
+   # Base Rate
+   for (i in 1:N){
+      pitmp[i] ~ dunif(0,1)
+      pi[i] <- pitmp[i]/sum(pitmp[1:N])
+      pi.cut[i] <- cut(pi[i])
+   }
+   ppb ~ dcat(pi.cut[1:N])
+   # Scalar Variability Coefficient  
+   for (i in 1:S){
+      lambda[i] <- 1/pow(sigma[i],2)
+      sigma[i] ~ dunif(0,10)
+   }   
+   # Constants
+   pic <- 3.1415      
+}

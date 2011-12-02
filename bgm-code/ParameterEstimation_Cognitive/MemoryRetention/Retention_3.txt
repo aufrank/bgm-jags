@@ -1,0 +1,36 @@
+# Retention With Structured Individual Differences
+model{
+   # Data Follow A Binomial Distribution
+   for (i in 1:ns){
+      for (j in 1:nt){
+         k[i,j] ~ dbin(theta[i,j],n[i,j])
+      }
+   }
+   # Retention Rate At Each Lag For Each Subject Decays Exponentially
+   for (i in 1:ns){
+      for (j in 1:nt){
+         theta[i,j] <- min(1,exp(-alpha[i]*t[j])+beta[i])
+      }
+   }
+   # Parameters For Each Subject Drawn From Gaussian Group Distributions
+   for (i in 1:ns){
+      alpha[i] ~ dnorm(alphamu,alphalambda)I(0,1) # Censor To Valid Range
+      beta[i] ~ dnorm(betamu,betalambda)I(0,1) # Censor To Valid Range
+   }
+   # Priors For Group Distributions
+   alphamu ~ dunif(0,1)
+   alphalambda ~ dgamma(.001,.001)
+   alphasigma <- 1/sqrt(alphalambda)
+   betamu ~ dunif(0,1)
+   betalambda ~ dgamma(.001,.001)
+   betasigma <- 1/sqrt(betalambda)
+   # Posterior Predictive For Counts
+   for (i in 1:ns){
+      alpha.cut[i] <- cut(alpha[i])
+      beta.cut[i] <- cut(beta[i])
+      for (j in 1:nt){
+         predtheta[i,j] <- min(1,exp(-alpha.cut[i]*t[j])+beta.cut[i])
+         predk[i,j] ~ dbin(predtheta[i,j],n[i,j])
+      }
+   }
+}

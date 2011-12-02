@@ -1,0 +1,10 @@
+# Summarizing Distributions
+model {
+   # Prior on Rate
+   theta ~ dbeta(.01,.01)
+   # Observed Counts
+   k ~ dbin(theta,n)
+   # This Is A "Dummy" Variable That Copies The Prior
+   # But Is Never Updated By Data
+   thetaprior ~ dbeta(.01,.01)
+}

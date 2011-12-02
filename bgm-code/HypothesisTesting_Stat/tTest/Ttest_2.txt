@@ -1,0 +1,28 @@
+model
+{ 
+  for (i in 1:n1)
+  {
+    group1[i] ~ dnorm(muX,lambdaXY)
+  }
+  for (i in 1:n2)
+  {
+    group2[i] ~ dnorm(muY,lambdaXY)
+  }
+
+  lambdaXY <- pow(sigmaXY,-2)
+
+  delta       ~ dnorm(0,lambdaDelta)
+  lambdaDelta ~ dchisqr(1)
+	
+  sigma    ~ dnorm(0,sigmaChi)
+  sigmaChi ~ dchisqr(1)  
+  sigmaXY <- abs(sigma)
+
+  mu    ~ dnorm(0,muChi)
+  muChi ~ dchisqr(1)
+  
+  alpha <- delta*sigmaXY	
+
+  muX <- mu + alpha*0.5	
+  muY <- mu - alpha*0.5	
+}

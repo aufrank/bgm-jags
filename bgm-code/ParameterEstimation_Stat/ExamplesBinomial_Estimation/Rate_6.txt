@@ -1,0 +1,10 @@
+# Inferring return rate and numbers of surveys from observed returns
+model {
+   # Likelihood
+   for (i in 1:m){
+      k[i] ~ dbin(theta,n)
+   }   
+   # Priors
+   theta ~ dbeta(1,1)
+   n ~ dunif(0,Nmax)
+}   

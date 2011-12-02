@@ -1,0 +1,49 @@
+# SIMPLE Model
+model{
+   # Likelihood
+   for (d in 1:dsets){
+      for (i in 1:listlength[d]){
+         k[i,d] ~ dbin(theta[i,d],tr[d])
+      }
+   }   
+   # Similarities, Discriminabilities, and Response Probabilities
+   for (d in 1:dsets){
+      for (i in 1:listlength[d]){
+         for (j in 1:listlength[d]){
+            # Similarities
+            S[i,j,d] <- exp(-c[d]*abs(log(T[i,d])-log(T[j,d])))
+            # Discriminabilities
+            D[i,j,d] <- S[i,j,d]/sum(S[i,1:listlength[d],d])
+            # Response Probabilities
+            R[i,j,d] <- 1/(1+exp(-s[d]*(D[i,j,d]-t[d])));
+         }
+         # Free Recall Overall Response Probability
+         theta[i,d] <- min(1,sum(R[i,1:listlength[d],d]))
+      }
+   }   
+   # Priors And Cuts For Posterior Predictive
+   for (d in 1:dsets){
+      c[d] ~ dunif(0,100)
+      s[d] ~ dunif(0,100)
+      t[d] ~ dbeta(1,1)   
+      c.cut[d] <- cut(c[d])
+      s.cut[d] <- cut(s[d])
+      t.cut[d] <- cut(t[d])
+   }
+   for (d in 1:dsets){
+      for (i in 1:listlength[d]){
+         kpred[i,d] ~ dbin(thetapred[i,d],tr[d])
+         pcpred[i,d] <- kpred[i,d]/tr[d]
+      }
+   }
+   for (d in 1:dsets){
+      for (i in 1:listlength[d]){
+         for (j in 1:listlength[d]){
+            Spred[i,j,d] <- exp(-c.cut[d]*abs(log(T[i,d])-log(T[j,d])))
+            Dpred[i,j,d] <- Spred[i,j,d]/sum(Spred[i,1:listlength[d],d])
+            Rpred[i,j,d] <- 1/(1+exp(-s.cut[d]*(Dpred[i,j,d]-t.cut[d])));
+         }
+         thetapred[i,d] <- min(1,sum(Rpred[i,1:listlength[d],d]))
+      }
+   }
+}

@@ -1,0 +1,33 @@
+# Hierarchical Signal Detection Theory
+model{
+   # Relating observed counts to underlying Hit and False Alarm rates
+   for (i in 1:n) {
+      HR[i] ~ dbin(h[i],S[i])
+      FA[i] ~ dbin(f[i],N[i])
+      S[i] <- HR[i]+MI[i]
+      N[i] <- FA[i]+CR[i]
+   }  
+   # Reparameterization Using SDT
+   for (i in 1:n) {
+         h[i] <- phi(d[i]/2-c[i])
+         f[i] <- phi(-d[i]/2-c[i])
+   }
+   # Group Distributions
+   for (i in 1:n) {
+	 c[i] <- muc+ xiC*deltac[i]	
+         d[i] <- mud+ xiD*deltad[i]	
+	 deltac[i] ~ dnorm(0,lambdacNew)
+         deltad[i] ~ dnorm(0,lambdadNew)
+   }
+   # Priors
+   muc ~ dnorm(0,0.001)
+   mud ~ dnorm(0,0.001)
+   xiC ~ dbeta(1,1)				
+   xiD ~ dbeta(1,1)		
+   lambdacNew ~ dgamma(.1,.1) 		
+   lambdadNew ~ dgamma(.1,.1)		
+   sigmacNew <- 1/sqrt(lambdacNew)
+   sigmadNew <- 1/sqrt(lambdadNew)
+   sigmac <- abs(xiC)*sigmacNew
+   sigmad <- abs(xiD)*sigmadNew
+}

@@ -1,0 +1,27 @@
+# Retention With No Individual Differences
+model {
+   # Data Follow A Binomial Distribution
+   for (i in 1:ns){
+      for (j in 1:nt){
+         k[i,j] ~ dbin(theta[i,j],n[i,j])
+      }
+   }
+   # Retention Rate At Each Lag For Each Subject Decays Exponentially
+   for (i in 1:ns){
+      for (j in 1:nt){
+         theta[i,j] <- min(1,exp(-alpha*t[j])+beta)
+      }
+   }
+   # Priors
+   alpha ~ dunif(0,1)
+   beta ~ dunif(0,1)
+   # Posterior Predictive
+   beta.cut <- cut(beta)
+   alpha.cut <- cut(alpha)
+   for (i in 1:ns){
+      for (j in 1:nt){
+         predtheta[i,j] <- min(1,exp(-alpha.cut*t[j])+beta.cut)
+         predk[i,j] ~ dbin(predtheta[i,j],n[i,j])
+      }
+   }   
+}

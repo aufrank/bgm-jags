@@ -1,0 +1,33 @@
+display(log)
+check(D:/BugsBoek/NEW.BugsBook/Content/ParameterEstimation_Cognitive/SignalDetection/Codes/SDT_3.txt)
+model is syntactically correct
+data(D:/BugsBoek/NEW.BugsBook/Content/ParameterEstimation_Cognitive/SignalDetection/Codes/tmp/data.txt)
+data loaded
+compile(1)
+model compiled
+inits(1,D:/BugsBoek/NEW.BugsBook/Content/ParameterEstimation_Cognitive/SignalDetection/Codes/tmp/init_1.txt)
+this chain contains uninitialized variables
+refresh(100)
+gen.inits()
+initial values generated, model initialized
+update(1000)
+set(mud)
+set(muc)
+set(sigmad)
+set(sigmac)
+thin.updater(1)
+update(10000)
+coda(*,D:/BugsBoek/NEW.BugsBook/Content/ParameterEstimation_Cognitive/SignalDetection/Codes/tmp/coda)
+stats(*)
+
+Node statistics
+	 node	 mean	 sd	 MC error	2.5%	median	97.5%	start	sample
+	muc	-0.2926	0.1829	0.003847	-0.6797	-0.2866	0.05549	1001	10000
+	mud	3.218	0.5958	0.02475	2.24	3.157	4.528	1001	10000
+	sigmac	0.7011	0.2417	0.009157	0.2655	0.6831	1.23	1001	10000
+	sigmad	2.229	0.5872	0.02013	1.275	2.151	3.611	1001	10000
+history(*,D:/BugsBoek/NEW.BugsBook/Content/ParameterEstimation_Cognitive/SignalDetection/Codes/tmp/history.txt)
+
+History
+
+save(D:/BugsBoek/NEW.BugsBook/Content/ParameterEstimation_Cognitive/SignalDetection/Codes/tmp/log.txt)

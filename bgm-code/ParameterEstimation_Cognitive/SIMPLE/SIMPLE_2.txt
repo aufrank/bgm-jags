@@ -1,0 +1,53 @@
+# Hierarchical SIMPLE Model
+model{
+   # Likelihood
+   for (d in 1:dsets){
+      for (i in 1:listlength[d]){
+         k[i,d] ~ dbin(theta[i,d],tr[d])
+      }
+   }   
+   # Similarities, Discriminabilities, and Response Probabilities
+   for (d in 1:dsets){
+      t[d] <- max(0,min(1,alpha[1]*W[d]+alpha[2]))
+      for (i in 1:listlength[d]){
+         for (j in 1:listlength[d]){
+            # Similarities
+            S[i,j,d] <- exp(-c*abs(log(T[i,d])-log(T[j,d])))
+            # Discriminabilities
+            D[i,j,d] <- S[i,j,d]/sum(S[i,1:listlength[d],d])
+            # Response Probabilities
+            R[i,j,d] <- 1/(1+exp(-s*(D[i,j,d]-t[d])));
+         }
+         # Free Recall Overall Response Probability
+         theta[i,d] <- min(1,sum(R[i,1:listlength[d],d]))
+      }
+   }   
+   # Priors
+   c ~ dunif(0,100)
+   s ~ dunif(0,100)
+   alpha[1] ~ dunif(-1,0)
+   alpha[2] ~ dunif(0,1)   
+   # Posterior Predictive
+   c.cut <- cut(c)
+   s.cut <- cut(s)
+   for (i in 1:2){
+      alpha.cut[i] <- cut(alpha[i])
+   }
+   for (d in 1:gsets){
+      for (i in 1:listlength[d]){
+         kpred[i,d] ~ dbin(thetapred[i,d],tr[d])
+         pcpred[i,d] <- kpred[i,d]/tr[d]
+      }
+   }
+   for (d in 1:gsets){
+      t.cut[d] <- max(0,min(1,alpha.cut[1]*W[d]+alpha[2]))
+      for (i in 1:listlength[d]){
+         for (j in 1:listlength[d]){
+            Spred[i,j,d] <- exp(-c.cut*abs(log(T[i,d])-log(T[j,d])))
+            Dpred[i,j,d] <- Spred[i,j,d]/sum(Spred[i,1:listlength[d],d])
+            Rpred[i,j,d] <- 1/(1+exp(-s.cut*(Dpred[i,j,d]-t.cut[d])));
+         }
+         thetapred[i,d] <- min(1,sum(Rpred[i,1:listlength[d],d]))
+      }
+   }
+}

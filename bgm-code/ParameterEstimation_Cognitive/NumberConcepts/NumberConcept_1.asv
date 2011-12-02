@@ -1,0 +1,144 @@
+% Number Concept Using Knower Levels
+
+clear;
+
+% Load Data
+load NumberConcept g q age Q S Z N
+
+% WinBUGS Parameters
+nchains=1;
+nburnin=1e3;
+nsamples=2e3;
+
+% Assign Matlab Variables to the Observed WinBUGS Nodes
+datastruct = struct('S', S, 'Q', Q, 'N', N, 'g', g, 'q', q, 'Z', Z);
+
+% Initialize Unobserved Variables
+for i=1:nchains
+    S0.v=10;
+    S0.z=floor(rand(1,S)*Z)+1;
+    S0.pitmp=1/N*ones(1,N);
+    init0(i) = S0;
+end
+
+% Use WinBUGS to Sample
+[samples, stats, structarray] = matbugs(datastruct, ...
+    fullfile(pwd, 'NumberConcept_1.txt'), ...
+    'init', init0, ...
+    'nChains', nchains, ...
+    'view', 0, 'nburnin', nburnin, 'nsamples', nsamples, ...
+    'thin', 1, 'DICstatus', 0, 'refreshrate',1, ...
+    'monitorParams', {'pp','ppz','ppb','v','z'}, ...
+    'Bugdir', 'C:/Program Files/WinBUGS14');
+save tmp samples
+
+% Analysis
+% Posterior for BaseRate
+figure(1);clf;hold on;
+bins=[1:N];
+count=hist(samples.ppb,bins);
+ph=bar(bins,count/sum(count));
+set(ph,'facecolor','k');
+set(gca,'xlim',[0 N+1],'xtick',[1:N],'ytick',[],'box','on','fontsize',14);
+xlabel('Number','fontsize',16);
+ylabel('Probability','fontsize',16);
+% Posterior Over Knower Levels
+figure(2);clf;hold on;
+labs=char('0','1','2','3','4','HN');
+m=squeeze(mean(samples.z,2));
+[val ind]=sort(m);
+for i=1:S
+subplot(6,14,i);hold on;
+    subj=ind(i);
+    count=hist(samples.z(1,:,subj),bins);
+    count=count/sum(count);
+ph=bar(bins,count);
+set(ph,'facecolor','k');
+axis([0 Z+1 0 1.05]);
+set(gca,'xtick',[1:6],'xticklabel',[],'ytick',[],...
+    'ticklength',[.1 0],'box','on');
+th=text(3,1,int2str(subj));
+set(th,'fontsize',10,'vert','bot','hor','cen');
+end;
+[ax,th]=suplabel('Knower Level','x');
+set(th,'fontsize',16,'vert','bot');
+[ax,th]=suplabel('Posterior Mass','y');
+set(th,'fontsize',16,'vert','top');
+% Knower-Level by Age
+figure(3);clf;hold on;
+mv=zeros(S,1);
+for i=1:S
+    mv(i)=ModalValue(squeeze(samples.z(1,:,i)));
+end;
+ph=plot(age,mv,'kx');
+set(ph,'markersize',8,'linewidth',2);
+r=corrcoef(age,mv);
+r=r(1,2);
+th=text(30,7,[' r=' num2str(r,2)]);
+set(th,'fontsize',14,'vert','top','hor','left');
+axis([30 55 0 7]);
+set(gca,'box','on','fontsize',14);
+set(gca,'xtick',[30:5:55]);
+set(gca,'ytick',[1:6],'yticklabel',{'0','1','2','3','4','HN'});
+xlabel('Age (Months)','fontsize',16);
+ylabel('Knower-Level','fontsize',16);
+
+% Posterior Prediction For Knower Levels
+figure(4);clf;
+sc=10;sc2=.1;
+eps=.000;
+for z=1:Z
+    subplot(2,3,z);hold on;
+    for i=1:N
+        count=hist(squeeze(samples.ppz(1,:,z,i)),bins);
+        count=count/max(count);
+        for j=1:N
+            if count(j)>eps
+                ph=plot(i,j,'ks');
+                set(ph,'markersize',count(j)*sc);
+            end;
+        end;
+    end;
+    match=find(mv==z);
+    for i=1:length(match)
+        ph=plot(q(match(i),1:Q(match(i)))+randn(1,Q(match(i)))*sc2,...
+            g(match(i),1:Q(match(i)))+randn(1,Q(match(i)))*sc2,'kx');
+        set(ph,'markersize',8,'linewidth',2);
+    end;
+    axis([0 N+1 0 N+1]);
+    set(gca,'box','on','fontsize',12);
+    set(gca,'xtick',setdiff(unique(q),0),'ytick',[1:N]);
+    xlabel('Question','fontsize',14);
+    ylabel('Answer','fontsize',14);
+    th=title([deblank(labs(z,:)) ' Knower']);
+    set(th,'fontsize',15,'vert','mid');
+end;
+
+% Posterior Prediction For Six Subjects
+figure(5);clf;
+subjlist=[79 77 73 70 72 69]
+sc=10;sc2=.1;
+for z=1:length(subjlist)
+    subj=subjlist(z);
+	subplot(2,3,z);hold on;
+	for i=1:N
+		count=hist(squeeze(samples.pp(1,:,subj,i)),bins);
+		count=count/max(count);
+		for j=1:N
+			if count(j)>eps
+				ph=plot(i,j,'ks');
+				set(ph,'markersize',count(j)*sc);
+			end;
+		end;
+	end;
+	ph=plot(q(subj,1:Q(subj))+randn(1,Q(subj))*sc2,...
+			g(subj,1:Q(subj))+randn(1,Q(subj))*sc2,'kx');
+	set(ph,'markersize',8,'linewidth',2);
+axis([0 N+1 0 N+1]);
+set(gca,'box','on','fontsize',12);
+set(gca,'xtick',setdiff(unique(q),0),'ytick',[1:N]);
+xlabel('Question','fontsize',14);
+ylabel('Answer','fontsize',14);
+th=title(['Subject ' int2str(subj) ' (' deblank(labs(mv(subj),:)) ' Knower)']);
+set(th,'fontsize',15,'vert','mid');
+end;

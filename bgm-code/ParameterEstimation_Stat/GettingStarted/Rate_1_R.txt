@@ -1,0 +1,17 @@
+library(R2WinBUGS)
+bugsdir = "C:/Program Files/WinBUGS14"
+
+k = 5
+n = 10
+
+data    = list("k", "n")
+myinits = list(
+  list(theta = 0.5))
+
+parameters = c("theta")
+
+samples = bugs(data, inits=myinits, parameters,
+	 	model.file ="Rate_1.txt",
+	 	n.chains=2, n.iter=20000, n.burnin=0, n.thin=1,
+	 	DIC=F, bugs.directory=bugsdir,
+	 	codaPkg=F, debug=F)

@@ -1,0 +1,37 @@
+model
+{
+
+for (i in 1:nsubj)
+{
+# Each Individual i Has a Personal Beta
+# We First Transform the Beta[i]'s to the Probit Scale,
+# and Call These betaphi[i]'s:
+   beta[i] <- phi(betaphi[i])
+
+# Personal betaphi's Come From a Group-Level Normal:
+   betaphi[i] ~ dnorm(muphi,tauphi)
+}
+# Priors for the Group-Level Normal:
+muphi   ~ dnorm(0,1)
+tauphi <- pow(sigmaphi,-2)
+sigmaphi ~ dunif(0,10) 
+
+# Obtain the Mean on the Probability Scale 
+mu <- phi(muphi) 
+
+# Derive WA Predictions:	
+for (i in 1:nsubj)
+{
+   for (j in 1:nitem)
+   {
+      theta[i,j] <- ((beta[i]*PA[i,j])+((1-beta[i])*PB[i,j]))
+      PAB[i,j] ~ dnorm(theta[i,j], lambda)
+   }
+}
+# The First Line Above Computes the Model Predictions theta[i,j];
+# The Second Line Connects theta[i,j] to the Data
+# Because theta[i,j] is Really a Point Prediction, We'll Use
+# "dnorm(theta[i,j],lambda)", Where the Precision lambda is 
+# Set Very High: 
+lambda <- 1000
+}

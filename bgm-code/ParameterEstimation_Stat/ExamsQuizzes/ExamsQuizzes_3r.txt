@@ -1,0 +1,25 @@
+# Twenty Questions
+model {
+  # Correctness Of Each Answer Is Bernoulli Trial
+  for (i in 1:np){
+     for (j in 1:nq){
+        k[i,j] ~ dbern(theta[i,j])
+     }
+  }
+  # Probability Correct Is Product Of Question By Person Rates
+  for (i in 1:np){
+     for (j in 1:nq){
+        theta[i,j] <- p[i]*q[j]
+     }
+  }
+  # Priors For People and Questions
+  for (i in 1:np){
+     p[i] ~ dbeta(1,1)
+  }
+  for (j in 1:nq){
+     q[j] ~ dbeta(1,1)
+  }
+  NA.array[1] <- k[1,13]
+  NA.array[2] <- k[8,5]
+  NA.array[3] <- k[10,18]
+}

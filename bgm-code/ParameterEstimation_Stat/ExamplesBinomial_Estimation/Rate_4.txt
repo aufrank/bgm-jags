@@ -1,0 +1,19 @@
+# Prior And Posterior Prediction
+model{
+   # Observed Counts
+   for (i in 1:m){
+      k[i] ~ dbin(theta,n)
+   }
+   # Prior on Common Rate
+   theta ~ dbeta(1,1)
+   # Prior Predictive
+   # This Is A "Dummy" Variable That Copies The Prior
+   # But Is Never Updated By Data
+   thetaprior ~ dbeta(1,1)
+   priorpredk ~ dbin(thetaprior,n)
+   # Posterior Predictive
+   # The Cut Function Allows Sampling To Flow Forward
+   # But Prevents Inference Flowing Back
+   theta.cut <- cut(theta) 
+   postpredk ~ dbin(theta.cut,n)
+}

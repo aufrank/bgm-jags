@@ -1,0 +1,108 @@
+(*1*) MODULE WBDevShiftedWald;
+IMPORT
+WBDevUnivariate,
+WBDevRandnum, WBDevSpecfunc,
+Math;
+CONST
+(*2*) drift = 0; bound = 1; shift = 2;
+TYPE
+StdNode = POINTER TO RECORD (WBDevUnivariate.StdNode) END;
+Left = POINTER TO RECORD (WBDevUnivariate.Left) END;
+Right = POINTER TO RECORD (WBDevUnivariate.Right) END;
+Interval = POINTER TO RECORD (WBDevUnivariate.Interval) END;
+Factory = POINTER TO RECORD (WBDevUnivariate.Factory) END;
+VAR
+(*3*) log2Pi: REAL;
+fact-: WBDevUnivariate.Factory;
+PROCEDURE DeclareArgTypes (OUT args: ARRAY OF CHAR);
+BEGIN
+(*4*) args := "sss";
+END DeclareArgTypes;
+PROCEDURE DeclareProperties (OUT isDiscrete, canIntegrate: BOOLEAN);
+BEGIN
+(*5*) isDiscrete := FALSE;
+canIntegrate := FALSE;
+END DeclareProperties;
+PROCEDURE NaturalBounds (node: WBDevUnivariate.Node; OUT lower, upper:REAL);
+VAR
+Ter: REAL;
+(*6*) BEGIN
+Ter:= node.arguments[shift][0].Value();
+lower := Ter;
+upper := INF;
+END NaturalBounds;
+(*7*) PROCEDURE LogFullLikelihood (node: WBDevUnivariate.Node; OUT value: REAL);
+VAR
+v, a, Ter, t, x: REAL;
+BEGIN
+t:=node.value;
+v:=node.arguments[drift][0].Value();
+a:=node.arguments[bound][0].Value();
+Ter:=node.arguments[shift][0].Value();
+x := t-Ter;
+value:= -0.5*log2Pi + Math.Ln(a) - 1.5*Math.Ln(x) - ((a-v*x)*(a-v*x))/(2*x);
+END LogFullLikelihood;
+(*8*) PROCEDURE LogPropLikelihood (node: WBDevUnivariate.Node; OUT value: REAL);
+VAR
+BEGIN
+LogFullLikelihood(node, value);
+END LogPropLikelihood;
+(*9*) PROCEDURE LogPrior (node: WBDevUnivariate.Node; OUT value: REAL);
+VAR
+BEGIN
+LogFullLikelihood(node, value);
+END LogPrior;
+(*10*) PROCEDURE Cumulative
+(node: WBDevUnivariate.Node; x: REAL; OUT value: REAL);
+VAR
+BEGIN
+END Cumulative;
+(*11*) PROCEDURE DrawSample
+(node: WBDevUnivariate.Node; censoring: INTEGER; OUT sample: REAL);
+VAR
+BEGIN
+END DrawSample;
+PROCEDURE (f: Factory) New (option: INTEGER): WBDevUnivariate.Node;
+VAR
+node: WBDevUnivariate.Node;
+stdNode: StdNode; left: Left; right: Right; interval: Interval;
+BEGIN
+CASE option OF
+|WBDevUnivariate.noCensoring:
+NEW(stdNode);
+node := stdNode;
+|WBDevUnivariate.leftCensored:
+NEW(left);
+node := left;
+|WBDevUnivariate.rightCensored:
+NEW(right);
+node := right;
+|WBDevUnivariate.intervalCensored:
+NEW(interval);
+node := interval;
+END;
+node.SetCumulative(Cumulative);
+node.SetDeclareArgTypes(DeclareArgTypes);
+node.SetDeclareProperties(DeclareProperties);
+node.SetDrawSample(DrawSample);
+node.SetLogFullLikelihood(LogFullLikelihood);
+node.SetLogPropLikelihood(LogPropLikelihood);
+node.SetLogPrior(LogPrior);
+node.SetNaturalBounds(NaturalBounds);
+node.Initialize;
+RETURN node;
+END New;
+PROCEDURE Install*;
+BEGIN
+WBDevUnivariate.Install(fact);
+END Install;
+PROCEDURE Init;
+VAR
+f: Factory;
+BEGIN
+log2Pi := Math.Ln(2 * Math.Pi());
+NEW(f); fact := f;
+END Init;
+BEGIN
+Init;
+(*12*) END WBDevShiftedWald.

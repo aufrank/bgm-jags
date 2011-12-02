@@ -1,0 +1,29 @@
+display(log)
+check(D:/BugsBoek/NEW.BugsBook/Content/ParameterEstimation_Stat/GettingStarted/Codes/Rate_1.txt)
+model is syntactically correct
+data(D:/BugsBoek/NEW.BugsBook/Content/ParameterEstimation_Stat/GettingStarted/Codes/tmp/data.txt)
+data loaded
+compile(2)
+model compiled
+inits(1,D:/BugsBoek/NEW.BugsBook/Content/ParameterEstimation_Stat/GettingStarted/Codes/tmp/init_1.txt)
+chain initialized but other chain(s) contain uninitialized variables
+inits(2,D:/BugsBoek/NEW.BugsBook/Content/ParameterEstimation_Stat/GettingStarted/Codes/tmp/init_2.txt)
+model is initialized
+refresh(100)
+gen.inits()
+command #Bugs:gen.inits cannot be executed (is greyed out)
+update(0)
+set(theta)
+thin.updater(1)
+update(20000)
+coda(*,D:/BugsBoek/NEW.BugsBook/Content/ParameterEstimation_Stat/GettingStarted/Codes/tmp/coda)
+stats(*)
+
+Node statistics
+	 node	 mean	 sd	 MC error	2.5%	median	97.5%	start	sample
+	theta	0.5004	0.1386	6.329E-4	0.2342	0.5006	0.765	1	40000
+history(*,D:/BugsBoek/NEW.BugsBook/Content/ParameterEstimation_Stat/GettingStarted/Codes/tmp/history.txt)
+
+History
+
+save(D:/BugsBoek/NEW.BugsBook/Content/ParameterEstimation_Stat/GettingStarted/Codes/tmp/log.txt)

@@ -1,0 +1,8 @@
+# Inferring A Common Rate
+model{
+   # Prior on Single Rate
+   theta ~ dbeta(1,1)    
+   # Observed Counts
+   k1 ~ dbin(theta,n1)
+   k2 ~ dbin(theta,n2)
+}

@@ -1,0 +1,28 @@
+model
+{
+# Data are Normally Distributed 
+  for (i in 1:nsubj)
+  {
+    X[i] ~ dnorm(muX,lambdaX)
+  } 
+  lambdaX <- pow(sigmaX,-2)
+
+# Delta and sigmaX come from a Cauchy distribution,
+# which is not predefined in WinBUGS. A common
+# solution is to draw delta and sigmaX from
+# from a Normal distribution with mean 0
+# and precision given by a Chi Square 
+# distribution with 1 degree of freedom.
+
+  delta       ~ dnorm(0,lambdaDelta)
+  lambdaDelta ~ dchisqr(1)
+
+  sigma     ~ dnorm(0,lambdaChi)
+  lambdaChi ~ dchisqr(1)
+
+# Sigma can only be positive (half-Cauchy)
+  sigmaX <- abs(sigma)
+
+# delta = muX/sigmaX:
+  muX <- delta * sigmaX
+}

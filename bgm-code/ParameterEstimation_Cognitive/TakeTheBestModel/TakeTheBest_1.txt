@@ -1,0 +1,31 @@
+# Take The Best With Known Search Order
+model {
+   # Observed Decisions
+   for (i in 1:nq) {
+      k[i] ~ dbern(theta[i,d1[i]])
+   }   
+   # TTB Decision
+   for (i in 1:nq){   
+      # Cue contributions to decision
+      for (j in 1:nc){
+         w[i,j] <- (c[p[i,1],j]-c[p[i,2],j])*pow(2,vo[j]-1)
+      }      
+      # TTB takes the first cue, or they are not different
+      # First object gives d1[i]=3, Second object gives d1[i]=1, Same gives d1[i]=2
+      dtmp[i] <- sum(w[i,1:nc])
+      d[i] <- -1*step(-dtmp[i])+step(dtmp[i])
+      d1[i] <- d[i]+2      
+      # Goes with TTB decision with probability gamma, or guesses
+      theta[i,1] <- 1-gamma
+      theta[i,2] <- 0.5
+      theta[i,3] <- gamma    
+      # Whether decision was correct
+      correct[i] <- equals(k[i],1)*equals(d1[i],3)
+                    +equals(k[i],0)*equals(d1[i],1)
+                    +0.5*equals(d1[i],2)
+   }
+   # Proportion of correct decision, with hack to insure monitoring
+   sc <- sum(correct[1:nq])/nq+gamma-gamma   
+   # Priors
+   gamma ~ dbeta(1,1) 
+}

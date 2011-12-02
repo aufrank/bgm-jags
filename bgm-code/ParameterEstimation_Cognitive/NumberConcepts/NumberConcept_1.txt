@@ -1,0 +1,68 @@
+# Number Concept Using Knower Levels
+model {
+   # Data
+   for (i in 1:S){
+      for (j in 1:Q[i]){                  
+         # Probability a z[i]-knower will give g[i,j] when asked for q[i,j]
+         # is a categorical draw from their distribution over the 1:N toys
+         g[i,j] ~ dcat(npiprime[z[i],q[i,j],1:N])
+      }
+   }
+   # Likelihood
+   for (i in 1:Z){
+      for (j in 1:N){
+         for (k in 1:N){
+            piprimetmp[i,j,k,1] <- pi[k]
+            piprimetmp[i,j,k,2] <- 1/v*pi[k]
+            piprimetmp[i,j,k,3] <- v*pi[k]
+            # Will be 1 if knower-level (i.e, i-1) is same or greater than answer
+            ind1[i,j,k] <- step((i-1)-k)
+            # Will be 1 for the possible answer that matches the question
+            ind2[i,j,k] <- equals(k,j)
+            # Will be 1 for 0-knowers
+            ind3[i,j,k] <- equals(i,1)
+            # Will be 1 for HN-knowers
+            ind4[i,j,k] <- equals(i,Z)
+            ind5[i,j,k] <- ind3[i,j,k]+ind4[i,j,k]*(2+ind2[i,j,k])
+                           +(1-ind4[i,j,k])*(1-ind3[i,j,k])
+                           *(ind1[i,j,k]+ind1[i,j,k]*ind2[i,j,k]+1)
+            piprime[i,j,k] <- piprimetmp[i,j,k,ind5[i,j,k]]
+            npiprime[i,j,k] <- piprime[i,j,k]/sum(piprime[i,j,1:N])
+         } 
+      }
+   }
+   # Posterior Prediction For Knower Levels
+   for (i in 1:Z){
+      for (j in 1:N){
+         for (k in 1:N){
+            npiprime.cut[i,j,k] <- cut(npiprime[i,j,k])
+         }
+         ppz[i,j] ~ dcat(npiprime.cut[i,j,1:N])
+      }
+   }
+   # Posterior Prediction For Subjects
+   for (i in 1:S){
+      z.cut[i] <- cut(z[i])
+      for (j in 1:N){
+         pp[i,j] ~ dcat(npiprime.cut[z.cut[i],j,1:N])
+      }
+   }        
+   # Baserate
+   for (i in 1:N){
+      pitmp[i] ~ dunif(0,1)
+      pi[i] <- pitmp[i]/sum(pitmp[1:N])
+      pi.cut[i] <- cut(pi[i])
+   }
+   ppb ~ dcat(pi.cut[1:N]) 
+   # Priors   
+   v ~ dunif(1,1000)
+   for (i in 1:S) {
+      z[i] ~ dcat(priorz[])
+   }
+   priorz[1] <- 1/6 # 0-knower
+   priorz[2] <- 1/6 # 1-knower
+   priorz[3] <- 1/6 # 2-knower
+   priorz[4] <- 1/6 # 3-knower
+   priorz[5] <- 1/6 # 4-knower
+   priorz[6] <- 1/6 # HN-knower      
+}  

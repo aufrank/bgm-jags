@@ -1,0 +1,29 @@
+# Signal Detection Theory
+model{
+   # Relating observed counts to underlying Hit and False Alarm rates
+   for (i in 1:n) {
+      # Hit counts per Subject are Binomial
+      # Using Hit Rates per Subject and Number of Signal Trials
+      HR[i] ~ dbin(h[i],S[i])
+      # False Alarm Counts per Subject are Binomial
+      # Using False Alarm Rates per Subject and Number of Signal Trials
+      FA[i] ~ dbin(f[i],N[i])
+      # Number of Signal Trials is Sum of Hit and Miss Counts per Subject
+      S[i] <- HR[i]+MI[i]
+      # Number of Noise Trials is sum of False Alarm and Correct Rejection Counts per Subject
+      N[i] <- FA[i]+CR[i]
+   }
+   # Reparameterization, Converting Hit and False Alarm Rates
+   # to Indices for Discriminability and Bias
+   # Assumes Equal-Variance Gaussian Signal Detection Theory Model
+   for (i in 1:n) {
+      h[i] <- phi(d[i]/2-c[i])
+      f[i] <- phi(-d[i]/2-c[i])
+   }
+   # These Priors over Discriminability and Bias Correspond 
+   # to Uniform Priors over the Hit and False Alarm Rates:
+   for (i in 1:n) {
+      d[i] ~ dnorm(0,0.5)
+      c[i] ~ dnorm(0,2)
+   }
+}

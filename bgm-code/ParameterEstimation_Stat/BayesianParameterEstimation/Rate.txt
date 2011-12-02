@@ -1,0 +1,10 @@
+model {
+
+      # Prior on Rate
+      theta ~ dbeta(1,1)
+    
+      # Observed Counts
+      k ~ dbin(theta,n)
+      
+      thetaprior ~ dbeta(1,1)	#to check whether density estimate has bias
+}

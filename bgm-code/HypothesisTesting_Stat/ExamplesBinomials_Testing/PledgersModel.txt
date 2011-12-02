@@ -1,0 +1,20 @@
+model 
+{
+  # Uniform Prior on Rates:
+  theta1 ~ dbeta(1,1)
+  theta2 ~ dbeta(1,1)
+    
+  # Binomial Distribution for Observed Counts:
+  s1 ~ dbin(theta1,n1)
+  s2 ~ dbin(theta2,n2)
+
+  # Difference between Rates:
+  delta <- theta1-theta2
+
+  # Priors
+  # Make "Dummy" Variables That Copy The Prior,
+  # But Are Never Updated By Data
+  theta1prior ~ dbeta(1,1)
+  theta2prior ~ dbeta(1,1)
+  deltaprior <- theta1prior-theta2prior
+}

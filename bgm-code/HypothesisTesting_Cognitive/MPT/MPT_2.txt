@@ -1,0 +1,106 @@
+# WinBUGS code for an MPT between-Ss hierarchical test.
+# 1 stands for group 1, 2 stands for group 2
+model
+{
+  # Data Group 1:
+  for (i in 1:n.subjects.1) 
+  {  
+    # MPT Category Probabilities:
+    p.1[i,1] <- c.1[i] * r.1[i]
+    p.1[i,2] <- (1-c.1[i]) * pow(u.1[i],2)
+    p.1[i,3] <- (1-c.1[i]) * 2 * u.1[i] * (1-u.1[i])
+    p.1[i,4] <- c.1[i] * (1-r.1[i]) + (1-c.1[i]) * pow(1-u.1[i],2)
+    
+    # Given the Category Probabilities, 
+    # the Data Follow a Multinomial Distribution:        
+    response.1[i,1:4] ~ dmulti(p.1[i,1:4],n.items)
+
+    # Transform Model Probabilities to Probit Scale 
+    # (Facilitates Hierarchical Analysis):
+    c.1[i] <- phi(c.1.probit[i])
+    r.1[i] <- phi(r.1.probit[i])
+    u.1[i] <- phi(u.1.probit[i])
+
+    # Individual Parameters Come From a Group-Level Normal Distribution:
+    c.1.probit[i] ~ dnorm(c.1.mu,c.1.tau)
+    r.1.probit[i] ~ dnorm(r.1.mu,r.1.tau)
+    u.1.probit[i] ~ dnorm(u.1.mu,u.1.tau)
+    # NB. tau is the precision, defined as 1/variance
+  }
+
+  # Data Group 2:
+  for (j in 1:n.subjects.2) 
+  {  
+    # MPT Category Probabilities:
+    p.2[j,1] <- c.2[j] * r.2[j]
+    p.2[j,2] <- (1-c.2[j]) * pow(u.2[j],2)
+    p.2[j,3] <- (1-c.2[j]) * 2 * u.2[j] * (1-u.2[j])
+    p.2[j,4] <- c.2[j] * (1-r.2[j]) + (1-c.2[j]) * pow(1-u.2[j],2)
+    
+    # Given the Category Probabilities, 
+    # the Data Follow a Multinomial Distribution:        
+    response.2[j,1:4] ~ dmulti(p.2[j,1:4],n.items)
+
+    # Transform Model Probabilities to Probit Scale 
+    # (Facilitates Hierarchical Analysis):
+    c.2[j] <- phi(c.2.probit[j])
+    r.2[j] <- phi(r.2.probit[j])
+    u.2[j] <- phi(u.2.probit[j])
+
+    # Individual Parameters Come From a Group-Level Normal Distribution:
+    c.2.probit[j] ~ dnorm(c.2.mu,c.2.tau)
+    r.2.probit[j] ~ dnorm(r.2.mu,r.2.tau)
+    u.2.probit[j] ~ dnorm(u.2.mu,u.2.tau)
+    # NB. tau is the precision, defined as 1/variance
+  }
+
+  c.1.mu <- c.mu + (.5*c.alpha)
+  c.2.mu <- c.mu - (.5*c.alpha)
+
+  r.1.mu <- r.mu + (.5*r.alpha)
+  r.2.mu <- r.mu - (.5*r.alpha)
+
+  u.1.mu <- u.mu + (.5*u.alpha)
+  u.2.mu <- u.mu - (.5*u.alpha)
+
+  # NB. mu is the grand mean, alpha is the effect 
+  # (i.e., the group difference)
+
+  # Group-Level Priors: 
+  c.mu     ~ dnorm(0,1)
+  r.mu     ~ dnorm(0,1)
+  u.mu     ~ dnorm(0,1)
+  # NB. This prior for mu corresponds to a uniform prior the rate scale,
+  # ranging from 0 to 1.
+
+  # Uninformative Prior on the Group-Level Standard Deviation:
+  c.1.sigma  ~ dunif(0,10)
+  r.1.sigma  ~ dunif(0,10)
+  u.1.sigma  ~ dunif(0,10)
+  c.2.sigma  ~ dunif(0,10)
+  r.2.sigma  ~ dunif(0,10)
+  u.2.sigma  ~ dunif(0,10)
+ 
+  # Transformation from Standard Deviation to Precision:
+  c.1.tau   <- pow(c.1.sigma,-2)
+  r.1.tau   <- pow(r.1.sigma,-2)
+  u.1.tau   <- pow(u.1.sigma,-2)
+  c.2.tau   <- pow(c.2.sigma,-2)
+  r.2.tau   <- pow(r.2.sigma,-2)
+  u.2.tau   <- pow(u.2.sigma,-2)
+	
+  c.alpha <- c.delta*( sqrt( ( (pow(c.1.sigma,2))*(n.subjects.1-1) + 
+  pow(c.2.sigma,2)*(n.subjects.2-1) )/(n.subjects.1+n.subjects.2-2) ) )	
+
+  r.alpha <- r.delta*( sqrt( ( (pow(r.1.sigma,2))*(n.subjects.1-1) + 
+  pow(r.2.sigma,2)*(n.subjects.2-1) )/(n.subjects.1+n.subjects.2-2) ) )	
+
+  u.alpha <- u.delta*( sqrt( ( (pow(u.1.sigma,2))*(n.subjects.1-1) + 
+  pow(u.2.sigma,2)*(n.subjects.2-1) )/(n.subjects.1+n.subjects.2-2) ) )	
+
+  # The "Unit Information Prior" on Effect Size delta (cf. Rouder et al., PBR):
+  c.delta  ~ dnorm(0,1)
+  r.delta  ~ dnorm(0,1)
+  u.delta  ~ dnorm(0,1)
+}
+

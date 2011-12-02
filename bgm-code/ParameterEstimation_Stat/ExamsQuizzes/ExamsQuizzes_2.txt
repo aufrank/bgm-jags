@@ -1,0 +1,28 @@
+# Exam Scores With Individual Differences
+model {
+   # Each Person Belongs To One Of Two Latent Groups
+   for (i in 1:p){
+      z[i] ~ dbern(0.5)
+      z1[i] <- z[i]+1
+   }
+   # The Second Group Now Allows Individual Differences
+   # So There Is a Rate Per Person
+   for (i in 1:p){
+      # First Group Is Still Just Guesses
+      theta[i,1] <- 0.5
+      # Second Group Drawn From A Censored Gaussian Distribution
+      theta[i,2] ~ dnorm(mu,lambda)I(0,1) # Censor The Probability To (0,1)
+   }   
+   # Second Group Mean, Precision (And Standard Deviation)
+   mu ~ dunif(0.5,1) # Greater Than 0.5 Average Success Rate
+   lambda ~ dgamma(.001,.001)
+   sigma <- 1/sqrt(lambda) 
+   # Posterior Predictive For Second Group
+   mu.cut <- cut(mu)
+   lambda.cut <- cut(lambda)
+   predphi ~ dnorm(mu.cut,lambda.cut)I(0,1)
+   # Data Follow Binomial With Rate Given By Each Person's Group Assignment
+   for (i in 1:p){
+      k[i] ~ dbin(theta[i,z1[i]],n)
+   }
+}

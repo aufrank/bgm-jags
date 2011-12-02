@@ -1,0 +1,50 @@
+model
+{
+  for(i in 1:74) # 74 Participants
+  {
+    # Binomial Distributions for Observed Counts:
+    KSN[i] ~ dbin(thetaSN[i],NSN[i]) 
+    KSB[i] ~ dbin(thetaSB[i],NSB[i])
+
+    # Transformation to Parameters on the Probit Scale:
+    thetaSN[i] <- phi(phiSN[i])
+    thetaSB[i] <- phi(phiSB[i])
+
+    # Individual Parameters that Quantify Performance in
+    # the Study-Neither Condition Come From a Group-Level Distribution: 
+    phiSN[i] ~ dnorm(muphi,tauphi)
+    # NB. tauphi is the precision, defined as 1/variance
+
+    # On the Probit Scale, Priming Effects Are Additive: 
+    phiSB[i] <- phiSN[i]+alpha[i]
+    # alpha[i] is the priming effect for participant i
+
+    # Individual Priming Effects Come From a Group-Level Distribution:  
+    alpha[i] ~ dnorm(mualpha,taualpha)
+    # NB. taualpha is the precision, defined as 1/variance 
+  }
+
+  # Group-Level Priors for the Study-Neither Condition:
+  muphi ~  dnorm(0,1)I(0,) 
+  # NB1. The I(0,) command ensures that all samples for muphi are > 0 
+  # NB2. This prior for muphi corresponds to a uniform prior the rate scale,
+  # ranging from 0.5 to 1.
+
+  # Uninformative Prior on the Group-Level Standard Deviation:
+  sigmaphi ~  dunif(0,10) 
+  # Transformation from Standard Deviation to Precision:
+  tauphi <- pow(sigmaphi,-2)
+
+  # Priors for the Group-Level Priming Effect (cf. Rouder et al., PBR):
+  mualpha <- delta * sigmaalpha
+  # Uninformative Prior for sigmaalpha:
+  sigmaalpha ~ dunif(0,10)
+  # Transformation from Standard Deviation to Precision:  
+  taualpha <- pow(sigmaalpha,-2)
+
+  # The "Unit Information Prior" on Effect Size delta (cf. Rouder et al., PBR):
+  delta ~ dnorm(0,1)I(0,)
+  # NB. The I(0,) incorporates the order-restriction that allows only
+  # positive values for delta
+}
+

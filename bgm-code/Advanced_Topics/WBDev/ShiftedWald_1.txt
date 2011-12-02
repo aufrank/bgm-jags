@@ -1,0 +1,11 @@
+model {
+   # The shifted Wald parameters are drawn from their prior distributions
+   v ~ dunif(0, 10) 
+   a ~ dunif(0, 10)
+   Ter ~ dunif(0, 1)
+
+   # The data are shifted Wald distributed
+   for (i in 1:nrt) {
+      rt[i] ~ ShiftedWald(v,a,Ter)
+   }
+}

@@ -1,0 +1,39 @@
+model
+{
+  for(i in 1:26) # 26 Normal Control Participants
+  {
+    # Binomial Distributions for Observed Counts:
+    KNC[i] ~ dbin(thetaNC[i],NNC[i])
+    # Transformation to Parameters on the Probit Scale:
+    thetaNC[i] <- phi(phiNC[i])
+    # Individual Parameters Come From a Group-Level Distribution:  
+    phiNC[i] ~ dnorm(muNC,tau)
+    # NB. tau is the precision, defined as 1/variance
+  }
+
+  for(j in 1:52) # 52 ADHD Participants
+  {
+    KAD[j]      ~ dbin(thetaAD[j],NAD[j])
+    thetaAD[j] <- phi(phiAD[j])
+    phiAD[j]    ~ dnorm(muAD,tau)
+  }
+
+  muNC <- mu + (.5*alpha)
+  muAD <- mu - (.5*alpha)
+  # NB. mu is the grand mean, alpha is the effect (i.e., the group difference)
+
+  # Group-Level Priors: 
+  mu ~ dnorm(0,1)
+  # NB. This prior for mu corresponds to a uniform prior the rate scale,
+  # ranging from 0 to 1.
+
+  # Uninformative Prior on the Group-Level Standard Deviation:
+  sigma ~ dunif(0,10)
+  # Transformation from Standard Deviation to Precision:
+  tau   <- pow(sigma,-2)	
+  alpha <- delta * sigma
+  # NB. This allows one to put a prior on effect size delta (cf. Rouder et al., PBR)
+
+  # The "Unit Information Prior" on Effect Size delta (cf. Rouder et al., PBR):
+  delta ~ dnorm(0,1)
+}

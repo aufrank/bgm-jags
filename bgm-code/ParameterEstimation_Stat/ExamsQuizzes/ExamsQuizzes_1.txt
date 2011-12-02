@@ -1,0 +1,17 @@
+# Exam Scores
+model{
+   # Each Person Belongs To One Of Two Latent Groups
+   for (i in 1:p){
+      z[i] ~ dbern(0.5)
+      z1[i] <- z[i]+1
+   }
+   # First Group Just Guesses
+   phi[1] <- 0.5
+   # Second Group Has Some Uknown Greater Rate Of Success
+   phi[2] ~ dunif(0.5,1)
+   # Data Follow Binomial With Rate Given By Each Person's Group Assignment
+   for (i in 1:p){
+      theta[i] <- phi[z1[i]]
+      k[i] ~ dbin(theta[i],n)
+   }
+}
