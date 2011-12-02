@@ -1,0 +1,8 @@
+#+TITLE:     README
+#+AUTHOR:    Austin F. Frank
+#+EMAIL:     austin.frank@gmail.com
+#+DATE:      
+#+OPTIONS:   H:3 num:nil toc:nil \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+
+This is a reimplementation of the examples and assignments from Lee and Wagenmaker's [[http://www.ejwagenmakers.com/BayesCourse/BayesBook.html][A Course in Bayesian Graphical Modeling for Cognitive Science]].  They provide WinBUGS implementations in a [[http://www.ejwagenmakers.com/BayesCourse/Code.zip][companion archive]].  The files in this repository translate their WinBUGS examples into [[http://mcmc-jags.sourceforge.net/][JAGS]].
